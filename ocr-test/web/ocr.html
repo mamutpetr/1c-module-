@@ -1,0 +1,459 @@
+<title>Tesseract OCR-стенд</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Unbounded:wght@600&display=swap">
+<style>
+  :root {
+    --bg: #eceff2;
+    --surface: #fbfcfd;
+    --sunken: #e3e7eb;
+    --ink: #152029;
+    --muted: #5a6875;
+    --line: #d3d9df;
+    --accent: #2b3fbf;
+    --accent-ink: #ffffff;
+    --accent-soft: #dfe3fb;
+    --low: #f6d77a;
+    --low-ink: #3d2f00;
+    --ok: #1f7a4d;
+    --ok-soft: #d9efe3;
+    --bad: #b3261e;
+    --bad-soft: #f7dcda;
+    --sans: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+    --display: "Unbounded", "IBM Plex Sans", system-ui, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --bg: #0e1318; --surface: #161d24; --sunken: #10161c; --ink: #e2e8ee; --muted: #93a1ae;
+      --line: #2a343e; --accent: #8f9bff; --accent-ink: #0e1318; --accent-soft: #232b55;
+      --low: rgba(246, 215, 122, .26); --low-ink: #ffe7a3;
+      --ok: #5fd39a; --ok-soft: #173427; --bad: #ff8a80; --bad-soft: #3d1c1a;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #0e1318; --surface: #161d24; --sunken: #10161c; --ink: #e2e8ee; --muted: #93a1ae;
+    --line: #2a343e; --accent: #8f9bff; --accent-ink: #0e1318; --accent-soft: #232b55;
+    --low: rgba(246, 215, 122, .26); --low-ink: #ffe7a3;
+    --ok: #5fd39a; --ok-soft: #173427; --bad: #ff8a80; --bad-soft: #3d1c1a;
+  }
+
+  body { background: var(--bg); color: var(--ink); font: 15px/1.5 var(--sans); }
+  .wrap { max-width: 1240px; margin: 0 auto; padding-inline: 20px; padding-block: 24px 48px; display: grid; gap: 18px; }
+  @media (max-width: 520px) { .wrap { padding-inline: 16px; } }
+
+  header { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 6px 20px; }
+  h1 { font: 600 clamp(20px, 3.2vw, 28px)/1.15 var(--display); letter-spacing: -.01em; margin: 0; text-wrap: balance; }
+  h1 span { color: var(--accent); }
+  .sub { color: var(--muted); margin: 0; max-width: 62ch; }
+
+  .toolbar { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: center; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; }
+  .group { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+  .group > .lbl { font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin-right: 2px; }
+  .sep { width: 1px; align-self: stretch; background: var(--line); }
+  @media (max-width: 760px) { .sep { display: none; } }
+
+  button, .btn { font: 500 14px/1 var(--sans); color: var(--ink); background: var(--sunken); border: 1px solid var(--line); border-radius: 7px; padding: 9px 12px; cursor: pointer; }
+  button:hover, .btn:hover { border-color: var(--muted); }
+  button:focus-visible, .btn:focus-within, input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 2px; }
+  button:disabled { opacity: .5; cursor: progress; }
+  .primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+  .primary:hover { border-color: var(--ink); }
+  .btn input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+
+  .chip { position: relative; }
+  .chip input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
+  .chip span { display: inline-block; font-size: 13px; padding: 6px 10px; border-radius: 999px; border: 1px solid var(--line); background: var(--sunken); color: var(--muted); }
+  .chip input:checked + span { background: var(--accent-soft); border-color: var(--accent); color: var(--ink); }
+
+  .grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); gap: 18px; align-items: start; }
+  @media (max-width: 860px) { .grid { grid-template-columns: minmax(0, 1fr); } }
+
+  .panel { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+  .panel-head { display: flex; flex-wrap: wrap; gap: 8px 12px; justify-content: space-between; align-items: center; padding: 10px 14px; border-bottom: 1px solid var(--line); }
+  .panel-head h2 { font: 600 12px/1.2 var(--sans); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 0; }
+
+  .drop { position: relative; min-height: 260px; display: grid; place-items: center; background: var(--sunken); padding: 12px; }
+  .drop.over { outline: 2px dashed var(--accent); outline-offset: -8px; }
+  .drop img { display: block; max-width: 100%; max-height: 70vh; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,.15); background: #fff; }
+  .drop .hint { color: var(--muted); text-align: center; font-size: 13px; }
+  .toggle-view { font-size: 12px; padding: 6px 9px; }
+
+  .status { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-bottom: 1px solid var(--line); font-size: 13px; color: var(--muted); }
+  .bar { flex: 1; height: 4px; background: var(--sunken); border-radius: 2px; overflow: hidden; }
+  .bar i { display: block; height: 100%; width: 0; background: var(--accent); transition: width .2s; }
+  .status.err { color: var(--bad); }
+
+  .stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border-bottom: 1px solid var(--line); }
+  .stat { padding: 10px 14px; border-right: 1px solid var(--line); }
+  .stat:last-child { border-right: 0; }
+  .stat b { display: block; font: 500 18px/1.2 var(--mono); font-variant-numeric: tabular-nums; }
+  .stat small { color: var(--muted); font-size: 12px; }
+  @media (max-width: 520px) { .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } .stat:nth-child(2) { border-right: 0; } .stat:nth-child(-n+2) { border-bottom: 1px solid var(--line); } }
+
+  .text { font: 14px/1.65 var(--mono); padding: 14px; overflow-x: auto; white-space: pre; min-height: 180px; max-height: 60vh; overflow-y: auto; }
+  .text .ln { min-height: 1.65em; }
+  .text .gap { height: .8em; }
+  .w.low { background: var(--low); color: var(--low-ink); border-radius: 3px; box-shadow: 0 0 0 1px var(--low); cursor: help; }
+  .legend { font-size: 12px; color: var(--muted); display: flex; align-items: center; gap: 6px; }
+  .legend i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; background: var(--low); }
+
+  .req { display: grid; }
+  .req-row { display: grid; grid-template-columns: 150px minmax(0, 1fr) auto; gap: 4px 12px; align-items: center; padding: 9px 14px; border-top: 1px solid var(--line); }
+  .req-row:first-child { border-top: 0; }
+  .req-row .k { color: var(--muted); font-size: 13px; }
+  .req-row .v { font: 14px/1.4 var(--mono); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+  .req-row .note { grid-column: 2 / -1; font-size: 12px; color: var(--muted); }
+  @media (max-width: 520px) { .req-row { grid-template-columns: minmax(0, 1fr) auto; } .req-row .k { grid-column: 1 / -1; } .req-row .note { grid-column: 1 / -1; } }
+  .pill { font-size: 12px; font-weight: 500; padding: 3px 8px; border-radius: 999px; white-space: nowrap; }
+  .pill.ok { background: var(--ok-soft); color: var(--ok); }
+  .pill.bad { background: var(--bad-soft); color: var(--bad); }
+  .pill.na { background: var(--sunken); color: var(--muted); }
+  .empty { padding: 14px; color: var(--muted); font-size: 13px; }
+
+  .foot { color: var(--muted); font-size: 13px; max-width: 80ch; }
+  .foot code { font-family: var(--mono); font-size: 12.5px; background: var(--sunken); padding: 1px 5px; border-radius: 4px; }
+
+  @media (prefers-reduced-motion: reduce) { .bar i { transition: none; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>Tesseract <span>OCR</span>-стенд</h1>
+    <p class="sub">Безкоштовне розпізнавання прямо в браузері: файл нікуди не відправляється. Завантажте фото чи скан рахунку, накладної або акта.</p>
+  </header>
+
+  <div class="toolbar">
+    <label class="btn primary" for="file">Завантажити фото / скан<input id="file" type="file" accept="image/*"></label>
+    <div class="group">
+      <span class="lbl">Приклад</span>
+      <button id="s-clean" type="button">Чистий рахунок</button>
+      <button id="s-bad" type="button">Поганий скан</button>
+    </div>
+    <span class="sep"></span>
+    <div class="group" id="langs">
+      <span class="lbl">Мови</span>
+      <label class="chip"><input id="l-ukr" type="checkbox" value="ukr" checked><span>Українська</span></label>
+      <label class="chip"><input id="l-rus" type="checkbox" value="rus"><span>Російська</span></label>
+      <label class="chip"><input id="l-eng" type="checkbox" value="eng" checked><span>English</span></label>
+    </div>
+    <span class="sep"></span>
+    <div class="group">
+      <span class="lbl">Обробка</span>
+      <label class="chip" title="Сірий, збільшення дрібних сканів, прибирання шуму та вирівнювання нахилу. Допомагає для фото з телефона й поганих сканів, але може трохи погіршити чистий документ."><input id="enhance" type="checkbox"><span>Покращити скан</span></label>
+      <label class="chip" title="Увімкніть для складних макетів із колонками. Для рахунків і таблиць краще вимкнено."><input id="auto-layout" type="checkbox"><span>Складний макет</span></label>
+    </div>
+  </div>
+
+  <div class="grid">
+    <section class="panel" aria-label="Зображення">
+      <div class="panel-head">
+        <h2 id="img-title">Зображення</h2>
+        <button id="view" class="toggle-view" type="button" hidden>Показати оброблене</button>
+      </div>
+      <div class="drop" id="drop">
+        <img id="preview" alt="Документ для розпізнавання" hidden>
+        <div class="hint" id="drop-hint">Перетягніть зображення сюди або вставте з буфера (Ctrl+V)</div>
+      </div>
+    </section>
+
+    <div style="display:grid; gap:18px">
+      <section class="panel" aria-label="Розпізнаний текст">
+        <div class="panel-head">
+          <h2>Розпізнаний текст</h2>
+          <div class="group">
+            <span class="legend"><i></i>упевненість нижче 60%</span>
+            <button id="copy" class="toggle-view" type="button" disabled>Копіювати</button>
+          </div>
+        </div>
+        <div class="status" id="status"><span id="status-text">Завантаження рушія…</span><div class="bar"><i id="bar-fill"></i></div></div>
+        <div class="stats">
+          <div class="stat"><b id="st-time">—</b><small>час, с</small></div>
+          <div class="stat"><b id="st-conf">—</b><small>середня впевненість</small></div>
+          <div class="stat"><b id="st-words">—</b><small>слів</small></div>
+          <div class="stat"><b id="st-low">—</b><small>сумнівних слів</small></div>
+        </div>
+        <div class="text" id="out" aria-live="polite"></div>
+      </section>
+
+      <section class="panel" aria-label="Знайдені реквізити">
+        <div class="panel-head"><h2>Реквізити для 1С</h2><span class="legend">IBAN, ЄДРПОУ та РНОКПП перевіряються за контрольною сумою</span></div>
+        <div class="req" id="req"><div class="empty">Тут з'являться IBAN, коди, дати й сума до сплати.</div></div>
+      </section>
+    </div>
+  </div>
+
+  <p class="foot">Рушій: Tesseract 5 (WebAssembly, <code>tesseract.js</code> 7), моделі <code>best_int</code>. Перший запуск завантажує ~8 МБ, далі працює швидше. Для масової обробки на сервері є той самий Tesseract у Python-скрипті <code>ocr-test/ocr.py</code> у репозиторії.</p>
+</div>
+
+<script src="tesseract.min.js"></script>
+<script>
+(() => {
+  const $ = (id) => document.getElementById(id);
+  const abs = (p) => new URL(p, document.baseURI).href;
+  const LOW = 60;
+
+  let worker = null, workerLangs = '', busy = false, pending = null;
+  let original = null, processed = null, showingProcessed = false, lastText = '';
+
+  function setStatus(text, frac, isErr) {
+    $('status-text').textContent = text;
+    $('status').classList.toggle('err', !!isErr);
+    if (frac != null) $('bar-fill').style.width = Math.round(frac * 100) + '%';
+  }
+
+  const STATUS_UA = {
+    'loading tesseract core': 'Завантаження ядра',
+    'initializing tesseract': 'Ініціалізація',
+    'loading language traineddata': 'Завантаження мовних моделей',
+    'initializing api': 'Підготовка',
+    'recognizing text': 'Розпізнавання',
+  };
+
+  function langs() {
+    const l = [...document.querySelectorAll('#langs input:checked')].map((i) => i.value);
+    return l.length ? l.join('+') : 'eng';
+  }
+
+  async function getWorker() {
+    const want = langs();
+    if (worker && workerLangs === want) return worker;
+    if (worker) { await worker.terminate(); worker = null; }
+    worker = await Tesseract.createWorker(want, 1, {
+      workerPath: abs('ocr-worker.js'),
+      workerBlobURL: false,
+      corePath: abs('core/'),
+      langPath: abs('lang'),
+      gzip: true,
+      cacheMethod: 'none',
+      logger: (m) => setStatus((STATUS_UA[m.status] || m.status) + '…', m.progress),
+    });
+    workerLangs = want;
+    return worker;
+  }
+
+  // --- попередня обробка: сірий -> збільшення дрібних сканів -> легке розмиття проти шуму.
+  // Бінаризацію робить сам Tesseract: на зашумлених сканах вона стабільніша за власний поріг.
+  function enhance(img) {
+    const scale = img.naturalWidth < 1500 ? 2 : 1;
+    const w = img.naturalWidth * scale, h = img.naturalHeight * scale;
+    const c = document.createElement('canvas');
+    c.width = w; c.height = h;
+    const ctx = c.getContext('2d');
+    ctx.imageSmoothingQuality = 'high';
+    ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, w, h);
+    ctx.filter = 'grayscale(1) contrast(1.15) blur(' + (0.6 * scale) + 'px)';
+    ctx.drawImage(img, 0, 0, w, h);
+    return c;
+  }
+
+  // --- розбір TSV: рядки зі словами та їх упевненістю
+  function parseTsv(tsv) {
+    const lines = [];
+    let key = null, prevBlock = null;
+    for (const row of tsv.split('\n')) {
+      const f = row.split('\t');
+      if (f.length < 12 || f[0] !== '5') continue;
+      const text = f.slice(11).join('\t');
+      if (!text.trim()) continue;
+      const k = f[2] + '.' + f[3] + '.' + f[4];
+      if (k !== key) {
+        if (prevBlock !== null && prevBlock !== f[2]) lines.push(null);
+        lines.push([]); key = k; prevBlock = f[2];
+      }
+      lines[lines.length - 1].push({ text, conf: +f[10] });
+    }
+    return lines;
+  }
+
+  function renderText(lines) {
+    const out = $('out');
+    out.textContent = '';
+    let words = 0, low = 0;
+    for (const ln of lines) {
+      const div = document.createElement('div');
+      if (!ln) { div.className = 'gap'; out.appendChild(div); continue; }
+      div.className = 'ln';
+      ln.forEach((w, i) => {
+        if (i) div.appendChild(document.createTextNode(' '));
+        const s = document.createElement('span');
+        s.className = 'w'; s.textContent = w.text;
+        words++;
+        if (w.conf < LOW) { s.classList.add('low'); s.title = 'Упевненість ' + Math.round(w.conf) + '%'; low++; }
+        div.appendChild(s);
+      });
+      out.appendChild(div);
+    }
+    if (!words) out.innerHTML = '<div class="empty">Текст не знайдено. Спробуйте «Покращити скан» або інше фото.</div>';
+    return { words, low };
+  }
+
+  // --- реквізити
+  function ibanValid(iban) {
+    const s = iban.slice(4) + iban.slice(0, 4);
+    let rem = 0;
+    for (const ch of s) {
+      const v = parseInt(ch, 36);
+      rem = v > 9 ? (rem * 100 + v) % 97 : (rem * 10 + v) % 97;
+    }
+    return rem === 1;
+  }
+  function edrpouValid(c) {
+    const d = [...c].map(Number), n = +c;
+    let w = (n < 30000000 || n > 60000000) ? [1, 2, 3, 4, 5, 6, 7] : [7, 1, 2, 3, 4, 5, 6];
+    const sum = (ws) => ws.reduce((a, x, i) => a + x * d[i], 0) % 11;
+    let s = sum(w);
+    if (s === 10) { s = sum(w.map((x) => x + 2)); if (s === 10) s = 0; }
+    return s === d[7];
+  }
+  function rnokppValid(c) {
+    const d = [...c].map(Number), w = [-1, 5, 7, 9, 4, 6, 10, 5, 7];
+    return (w.reduce((a, x, i) => a + x * d[i], 0) % 11) % 10 === d[9];
+  }
+
+  function extract(text) {
+    const rows = [];
+    const flat = text.replace(/ /g, ' ');
+
+    for (const m of flat.matchAll(/([UУОO0][AА])[ ]?(\d{2}(?:[ ]?\d){25})(?!\d)/g)) {
+      const iban = 'UA' + m[2].replace(/ /g, '');
+      const fixed = m[1] !== 'UA';
+      const ok = ibanValid(iban);
+      rows.push({ k: 'IBAN', v: iban, ok, note: fixed ? 'Префікс розпізнано як «' + m[1] + '», виправлено на UA.' : '' });
+    }
+    for (const m of flat.matchAll(/(?:ЄДРПОУ|ЕДРПОУ|ЄДР|код)\D{0,12}?(\d{8})(?!\d)/gi)) {
+      rows.push({ k: 'ЄДРПОУ', v: m[1], ok: edrpouValid(m[1]) });
+    }
+    for (const m of flat.matchAll(/(?:РНОКПП|ІПН|ИНН|ідентифікаційний)\D{0,12}?(\d{10})(?!\d)/gi)) {
+      rows.push({ k: 'РНОКПП / ІПН', v: m[1], ok: rnokppValid(m[1]) });
+    }
+    const months = 'січня|лютого|березня|квітня|травня|червня|липня|серпня|вересня|жовтня|листопада|грудня';
+    const dates = new Set();
+    for (const m of flat.matchAll(/\b(\d{1,2})[.\/](\d{1,2})[.\/](\d{2,4})\b/g)) dates.add(m[0]);
+    for (const m of flat.matchAll(new RegExp('\\b(\\d{1,2})\\s+(' + months + ')\\s+(\\d{4})', 'gi'))) dates.add(m[0]);
+    dates.forEach((d) => rows.push({ k: 'Дата', v: d, ok: null }));
+
+    const numRe = /\d{1,3}(?:[ ]\d{3})*[,.]\d{2}(?!\d)|\d+[,.]\d{2}(?!\d)/g;
+    const lines = flat.split('\n');
+    const pick = (re) => {
+      for (let i = lines.length - 1; i >= 0; i--) {
+        if (re.test(lines[i])) { const n = lines[i].match(numRe); if (n) return n[n.length - 1]; }
+      }
+      return null;
+    };
+    const total = pick(/до\s+сплати|всього|усього|итого|к\s+оплате/i);
+    const vat = pick(/ПДВ|НДС/i);
+    if (total) rows.push({ k: 'Сума до сплати', v: total, ok: null });
+    if (vat) rows.push({ k: 'ПДВ', v: vat, ok: null });
+    return rows;
+  }
+
+  function renderReq(rows) {
+    const box = $('req');
+    box.textContent = '';
+    if (!rows.length) { box.innerHTML = '<div class="empty">Реквізитів не знайдено.</div>'; return; }
+    for (const r of rows) {
+      const row = document.createElement('div'); row.className = 'req-row';
+      const k = document.createElement('span'); k.className = 'k'; k.textContent = r.k;
+      const v = document.createElement('span'); v.className = 'v'; v.textContent = r.v;
+      const p = document.createElement('span');
+      p.className = 'pill ' + (r.ok === null ? 'na' : r.ok ? 'ok' : 'bad');
+      p.textContent = r.ok === null ? 'знайдено' : r.ok ? 'сума вірна' : 'помилка в цифрах';
+      row.append(k, v, p);
+      if (r.note) { const n = document.createElement('span'); n.className = 'note'; n.textContent = r.note; row.appendChild(n); }
+      box.appendChild(row);
+    }
+  }
+
+  function showImage(which) {
+    const img = $('preview');
+    showingProcessed = which === 'processed' && !!processed;
+    img.src = showingProcessed ? processed.toDataURL('image/png') : original.src;
+    $('view').textContent = showingProcessed ? 'Показати оригінал' : 'Показати оброблене';
+    $('img-title').textContent = showingProcessed ? 'Після обробки' : 'Зображення';
+  }
+
+  async function run() {
+    if (!original) return;
+    if (busy) { pending = true; return; }
+    busy = true; pending = false;
+    $('copy').disabled = true;
+    try {
+      const w = await getWorker();
+      await w.setParameters({ tessedit_pageseg_mode: $('auto-layout').checked ? '3' : '6', preserve_interword_spaces: '1' });
+      processed = $('enhance').checked ? enhance(original) : null;
+      $('view').hidden = !processed;
+      if (!processed && showingProcessed) showImage('original');
+      setStatus('Розпізнавання…', 0);
+      const t0 = performance.now();
+      const { data } = await w.recognize(processed || original, { rotateAuto: !!processed }, { text: true, tsv: true });
+      const secs = (performance.now() - t0) / 1000;
+      lastText = data.text || '';
+      const { words, low } = renderText(parseTsv(data.tsv || ''));
+      renderReq(extract(lastText));
+      $('st-time').textContent = secs.toFixed(1);
+      $('st-conf').textContent = words ? Math.round(data.confidence) + '%' : '—';
+      $('st-words').textContent = words;
+      $('st-low').textContent = words ? low : '—';
+      $('copy').disabled = !lastText.trim();
+      setStatus('Готово · ' + workerLangs.replace(/\+/g, ' + '), 1);
+    } catch (e) {
+      console.error(e);
+      setStatus('Не вдалося запустити розпізнавання: ' + (e && e.message ? e.message : e), 0, true);
+    } finally {
+      busy = false;
+      if (pending) run();
+    }
+  }
+
+  function loadSrc(src) {
+    const img = new Image();
+    img.onload = () => {
+      original = img;
+      $('preview').hidden = false; $('drop-hint').hidden = true;
+      showImage('original');
+      run();
+    };
+    img.onerror = () => setStatus('Цей файл не вдалося відкрити як зображення. Підійдуть JPG, PNG, WEBP; PDF спершу збережіть як картинку.', 0, true);
+    img.src = src;
+  }
+  function loadFile(file) {
+    if (!file) return;
+    if (!file.type.startsWith('image/')) { setStatus('Потрібне зображення (JPG, PNG, WEBP). PDF спершу збережіть як картинку або зробіть скріншот сторінки.', 0, true); return; }
+    loadSrc(URL.createObjectURL(file));
+  }
+
+  $('file').addEventListener('change', (e) => { loadFile(e.target.files[0]); e.target.value = ''; });
+  $('s-clean').addEventListener('click', () => { $('enhance').checked = false; loadSrc(abs('samples/invoice_clean.png')); });
+  $('s-bad').addEventListener('click', () => { $('enhance').checked = true; loadSrc(abs('samples/invoice_bad_scan.png')); });
+  ['l-ukr', 'l-rus', 'l-eng', 'enhance', 'auto-layout'].forEach((id) => $(id).addEventListener('change', run));
+  $('view').addEventListener('click', () => showImage(showingProcessed ? 'original' : 'processed'));
+
+  const drop = $('drop');
+  drop.addEventListener('dragover', (e) => { e.preventDefault(); drop.classList.add('over'); });
+  drop.addEventListener('dragleave', () => drop.classList.remove('over'));
+  drop.addEventListener('drop', (e) => { e.preventDefault(); drop.classList.remove('over'); loadFile(e.dataTransfer.files[0]); });
+  document.addEventListener('paste', (e) => {
+    const item = [...(e.clipboardData?.items || [])].find((i) => i.type.startsWith('image/'));
+    if (item) loadFile(item.getAsFile());
+  });
+
+  $('copy').addEventListener('click', async () => {
+    try { await navigator.clipboard.writeText(lastText); $('copy').textContent = 'Скопійовано'; }
+    catch {
+      const sel = window.getSelection(), range = document.createRange();
+      range.selectNodeContents($('out')); sel.removeAllRanges(); sel.addRange(range);
+      $('copy').textContent = 'Виділено, натисніть Ctrl+C';
+    }
+    setTimeout(() => { $('copy').textContent = 'Копіювати'; }, 2000);
+  });
+
+  if (typeof Tesseract === 'undefined') {
+    setStatus('Не завантажився файл рушія tesseract.min.js.', 0, true);
+  } else {
+    $('s-bad').click();
+  }
+})();
+</script>
