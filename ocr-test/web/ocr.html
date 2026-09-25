@@ -56,12 +56,13 @@
   @media (max-width: 760px) { .sep { display: none; } }
 
   button, .btn { font: 500 14px/1 var(--sans); color: var(--ink); background: var(--sunken); border: 1px solid var(--line); border-radius: 7px; padding: 9px 12px; cursor: pointer; }
-  button:hover, .btn:hover { border-color: var(--muted); }
+  button:hover:not(:disabled), .btn:hover { border-color: var(--muted); }
   button:focus-visible, .btn:focus-within, input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 2px; }
-  button:disabled { opacity: .5; cursor: progress; }
+  button:disabled { opacity: .45; cursor: default; }
   .primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
   .primary:hover { border-color: var(--ink); }
   .btn input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+  .small { font-size: 12.5px; padding: 6px 9px; }
 
   .chip { position: relative; }
   .chip input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
@@ -70,19 +71,25 @@
 
   .grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); gap: 18px; align-items: start; }
   @media (max-width: 860px) { .grid { grid-template-columns: minmax(0, 1fr); } }
+  .col { display: grid; gap: 18px; }
 
   .panel { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
   .panel-head { display: flex; flex-wrap: wrap; gap: 8px 12px; justify-content: space-between; align-items: center; padding: 10px 14px; border-bottom: 1px solid var(--line); }
   .panel-head h2 { font: 600 12px/1.2 var(--sans); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 0; }
+  .file-meta { font-size: 12.5px; color: var(--muted); overflow-wrap: anywhere; }
 
-  .drop { position: relative; min-height: 260px; display: grid; place-items: center; background: var(--sunken); padding: 12px; }
+  .pager { display: flex; align-items: center; gap: 6px; }
+  .pager .num { font: 500 13px/1 var(--mono); font-variant-numeric: tabular-nums; min-width: 7ch; text-align: center; }
+
+  .drop { position: relative; min-height: 300px; display: grid; place-items: center; background: var(--sunken); padding: 12px; }
   .drop.over { outline: 2px dashed var(--accent); outline-offset: -8px; }
-  .drop img { display: block; max-width: 100%; max-height: 70vh; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,.15); background: #fff; }
-  .drop .hint { color: var(--muted); text-align: center; font-size: 13px; }
-  .toggle-view { font-size: 12px; padding: 6px 9px; }
+  .drop canvas { display: block; max-width: 100%; max-height: 75vh; width: auto; height: auto; border-radius: 3px; box-shadow: 0 1px 4px rgba(0,0,0,.18); background: #fff; }
+  .drop .hint { color: var(--muted); text-align: center; font-size: 13.5px; max-width: 34ch; }
+  .drop .hint b { display: block; color: var(--ink); font-weight: 600; margin-bottom: 4px; }
 
   .status { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-bottom: 1px solid var(--line); font-size: 13px; color: var(--muted); }
-  .bar { flex: 1; height: 4px; background: var(--sunken); border-radius: 2px; overflow: hidden; }
+  .status span { flex: 0 1 auto; }
+  .bar { flex: 1; min-width: 60px; height: 4px; background: var(--sunken); border-radius: 2px; overflow: hidden; }
   .bar i { display: block; height: 100%; width: 0; background: var(--accent); transition: width .2s; }
   .status.err { color: var(--bad); }
 
@@ -93,9 +100,14 @@
   .stat small { color: var(--muted); font-size: 12px; }
   @media (max-width: 520px) { .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } .stat:nth-child(2) { border-right: 0; } .stat:nth-child(-n+2) { border-bottom: 1px solid var(--line); } }
 
-  .text { font: 14px/1.65 var(--mono); padding: 14px; overflow-x: auto; white-space: pre; min-height: 180px; max-height: 60vh; overflow-y: auto; }
+  .text { font: 14px/1.65 var(--mono); padding: 14px; overflow-x: auto; white-space: pre; min-height: 180px; max-height: 64vh; overflow-y: auto; }
   .text .ln { min-height: 1.65em; }
   .text .gap { height: .8em; }
+  .text .page-sep { font: 600 11px/1 var(--sans); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); display: flex; align-items: center; gap: 10px; margin: 6px 0 10px; cursor: pointer; }
+  .text .page-sep:first-child { margin-top: 0; }
+  .text .page-sep::after { content: ""; flex: 1; border-top: 1px dashed var(--line); }
+  .text .page-sep.cur { color: var(--accent); }
+  .text .wait { color: var(--muted); font-family: var(--sans); font-size: 13px; }
   .w.low { background: var(--low); color: var(--low-ink); border-radius: 3px; box-shadow: 0 0 0 1px var(--low); cursor: help; }
   .legend { font-size: 12px; color: var(--muted); display: flex; align-items: center; gap: 6px; }
   .legend i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; background: var(--low); }
@@ -104,6 +116,7 @@
   .req-row { display: grid; grid-template-columns: 150px minmax(0, 1fr) auto; gap: 4px 12px; align-items: center; padding: 9px 14px; border-top: 1px solid var(--line); }
   .req-row:first-child { border-top: 0; }
   .req-row .k { color: var(--muted); font-size: 13px; }
+  .req-row .k small { display: block; font-size: 11.5px; opacity: .8; }
   .req-row .v { font: 14px/1.4 var(--mono); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
   .req-row .note { grid-column: 2 / -1; font-size: 12px; color: var(--muted); }
   @media (max-width: 520px) { .req-row { grid-template-columns: minmax(0, 1fr) auto; } .req-row .k { grid-column: 1 / -1; } .req-row .note { grid-column: 1 / -1; } }
@@ -122,15 +135,15 @@
 <div class="wrap">
   <header>
     <h1>Tesseract <span>OCR</span>-стенд</h1>
-    <p class="sub">Безкоштовне розпізнавання прямо в браузері: файл нікуди не відправляється. Завантажте фото чи скан рахунку, накладної або акта.</p>
+    <p class="sub">Розпізнавання сканів документів: PDF і TIFF на кілька сторінок, а також PNG, JPG, BMP. Працює в браузері, файл нікуди не відправляється.</p>
   </header>
 
   <div class="toolbar">
-    <label class="btn primary" for="file">Завантажити фото / скан<input id="file" type="file" accept="image/*"></label>
+    <label class="btn primary" for="file">Відкрити скан<input id="file" type="file" accept=".pdf,.tif,.tiff,.png,.jpg,.jpeg,.bmp,.webp,application/pdf,image/tiff,image/*"></label>
     <div class="group">
       <span class="lbl">Приклад</span>
-      <button id="s-clean" type="button">Чистий рахунок</button>
-      <button id="s-bad" type="button">Поганий скан</button>
+      <button id="s-pdf" type="button">PDF, 2 стор.</button>
+      <button id="s-tif" type="button">TIFF ч/б G4, 2 стор.</button>
     </div>
     <span class="sep"></span>
     <div class="group" id="langs">
@@ -142,30 +155,39 @@
     <span class="sep"></span>
     <div class="group">
       <span class="lbl">Обробка</span>
-      <label class="chip" title="Сірий, збільшення дрібних сканів, прибирання шуму та вирівнювання нахилу. Допомагає для фото з телефона й поганих сканів, але може трохи погіршити чистий документ."><input id="enhance" type="checkbox"><span>Покращити скан</span></label>
-      <label class="chip" title="Увімкніть для складних макетів із колонками. Для рахунків і таблиць краще вимкнено."><input id="auto-layout" type="checkbox"><span>Складний макет</span></label>
+      <label class="chip" title="Прибирає шум і нерівне освітлення (бінаризація Sauvola), збільшує скани з низькою роздільністю. Потрібно для сірих і кольорових сканів; для ч/б TIFF майже нічого не змінює."><input id="enhance" type="checkbox" checked><span>Покращити скан</span></label>
+      <label class="chip" title="Увімкніть для сторінок з колонками тексту. Для рахунків і таблиць краще вимкнено."><input id="auto-layout" type="checkbox"><span>Складний макет</span></label>
     </div>
   </div>
 
   <div class="grid">
-    <section class="panel" aria-label="Зображення">
+    <section class="panel" aria-label="Скан">
       <div class="panel-head">
-        <h2 id="img-title">Зображення</h2>
-        <button id="view" class="toggle-view" type="button" hidden>Показати оброблене</button>
+        <div class="pager">
+          <button id="prev" class="small" type="button" aria-label="Попередня сторінка" disabled>‹</button>
+          <span class="num" id="page-num">—</span>
+          <button id="next" class="small" type="button" aria-label="Наступна сторінка" disabled>›</button>
+        </div>
+        <div class="group">
+          <button id="rotate" class="small" type="button" disabled title="Якщо сторінку відскановано боком або догори дриґом">Повернути 90°</button>
+          <button id="view" class="small" type="button" disabled>Показати оброблене</button>
+        </div>
       </div>
       <div class="drop" id="drop">
-        <img id="preview" alt="Документ для розпізнавання" hidden>
-        <div class="hint" id="drop-hint">Перетягніть зображення сюди або вставте з буфера (Ctrl+V)</div>
+        <div class="hint" id="drop-hint"><b>Перетягніть сюди скан</b>PDF, TIFF, PNG, JPG або BMP. Можна вставити з буфера (Ctrl+V).</div>
+      </div>
+      <div class="panel-head" style="border-bottom:0; border-top:1px solid var(--line)">
+        <span class="file-meta" id="file-meta">Файл не вибрано</span>
       </div>
     </section>
 
-    <div style="display:grid; gap:18px">
+    <div class="col">
       <section class="panel" aria-label="Розпізнаний текст">
         <div class="panel-head">
           <h2>Розпізнаний текст</h2>
           <div class="group">
             <span class="legend"><i></i>упевненість нижче 60%</span>
-            <button id="copy" class="toggle-view" type="button" disabled>Копіювати</button>
+            <button id="copy" class="small" type="button" disabled>Копіювати</button>
           </div>
         </div>
         <div class="status" id="status"><span id="status-text">Завантаження рушія…</span><div class="bar"><i id="bar-fill"></i></div></div>
@@ -185,18 +207,31 @@
     </div>
   </div>
 
-  <p class="foot">Рушій: Tesseract 5 (WebAssembly, <code>tesseract.js</code> 7), моделі <code>best_int</code>. Перший запуск завантажує ~8 МБ, далі працює швидше. Для масової обробки на сервері є той самий Tesseract у Python-скрипті <code>ocr-test/ocr.py</code> у репозиторії.</p>
+  <p class="foot">Рушій: Tesseract 5 (WebAssembly, <code>tesseract.js</code> 7), моделі <code>best_int</code>. PDF розгортається через <code>pdf.js</code> при 300 dpi, TIFF (LZW, Deflate, JPEG, CCITT G3/G4) через <code>UTIF.js</code>. Перший запуск завантажує ~9 МБ. Для пакетної обробки на сервері є <code>ocr-test/ocr.py</code> у репозиторії.</p>
 </div>
 
 <script src="tesseract.min.js"></script>
+<script src="pdf.min.js"></script>
+<script src="pako_inflate.min.js"></script>
+<script src="utif.js"></script>
 <script>
 (() => {
   const $ = (id) => document.getElementById(id);
   const abs = (p) => new URL(p, document.baseURI).href;
   const LOW = 60;
+  const MAX_PAGES = 30;
+  const PDF_DPI = 300;
+  const MAX_SIDE = 3600;
 
-  let worker = null, workerLangs = '', busy = false, pending = null;
-  let original = null, processed = null, showingProcessed = false, lastText = '';
+  if (window.pdfjsLib) pdfjsLib.GlobalWorkerOptions.workerSrc = abs('pdf.worker.min.js');
+
+  // ---------- стан ----------
+  let worker = null, workerLangs = '';
+  let doc = null;          // { name, kind, count, render(i) -> Promise<canvas> }
+  let pages = [];          // [{ rot, result }]
+  let cur = 0, showProcessed = false;
+  let gen = 0, running = false;
+  let job = { i: 0, n: 1, done: 0 };
 
   function setStatus(text, frac, isErr) {
     $('status-text').textContent = text;
@@ -209,7 +244,7 @@
     'initializing tesseract': 'Ініціалізація',
     'loading language traineddata': 'Завантаження мовних моделей',
     'initializing api': 'Підготовка',
-    'recognizing text': 'Розпізнавання',
+    'recognizing text': 'розпізнавання',
   };
 
   function langs() {
@@ -228,28 +263,236 @@
       langPath: abs('lang'),
       gzip: true,
       cacheMethod: 'none',
-      logger: (m) => setStatus((STATUS_UA[m.status] || m.status) + '…', m.progress),
+      logger: (m) => {
+        if (m.status === 'recognizing text') {
+          const prefix = job.n > 1 ? 'Сторінка ' + (job.i + 1) + ' з ' + job.n + ': ' : '';
+          setStatus(prefix + 'розпізнавання…', (job.done + m.progress) / job.n);
+        } else {
+          setStatus((STATUS_UA[m.status] || m.status) + '…', m.progress);
+        }
+      },
     });
     workerLangs = want;
     return worker;
   }
 
-  // --- попередня обробка: сірий -> збільшення дрібних сканів -> легке розмиття проти шуму.
-  // Бінаризацію робить сам Tesseract: на зашумлених сканах вона стабільніша за власний поріг.
-  function enhance(img) {
-    const scale = img.naturalWidth < 1500 ? 2 : 1;
-    const w = img.naturalWidth * scale, h = img.naturalHeight * scale;
+  // ---------- відкриття файлів ----------
+  function newCanvas(w, h) {
     const c = document.createElement('canvas');
-    c.width = w; c.height = h;
-    const ctx = c.getContext('2d');
-    ctx.imageSmoothingQuality = 'high';
-    ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, w, h);
-    ctx.filter = 'grayscale(1) contrast(1.15) blur(' + (0.6 * scale) + 'px)';
-    ctx.drawImage(img, 0, 0, w, h);
+    c.width = Math.max(1, Math.round(w)); c.height = Math.max(1, Math.round(h));
     return c;
   }
 
-  // --- розбір TSV: рядки зі словами та їх упевненістю
+  async function openPdf(buf) {
+    if (!window.pdfjsLib) throw new Error('не завантажився pdf.js');
+    const pdf = await pdfjsLib.getDocument({ data: buf, isEvalSupported: false }).promise;
+    return {
+      kind: 'PDF',
+      count: pdf.numPages,
+      async render(i) {
+        const page = await pdf.getPage(i + 1);
+        const base = page.getViewport({ scale: 1 });
+        const scale = Math.min(PDF_DPI / 72, MAX_SIDE / Math.max(base.width, base.height));
+        const vp = page.getViewport({ scale });
+        const c = newCanvas(vp.width, vp.height);
+        const ctx = c.getContext('2d');
+        ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.width, c.height);
+        await page.render({ canvasContext: ctx, viewport: vp }).promise;
+        page.cleanup();
+        return c;
+      },
+    };
+  }
+
+  function openTiff(buf) {
+    if (!window.UTIF) throw new Error('не завантажився UTIF.js');
+    const ifds = UTIF.decode(buf).filter((ifd) => ifd.t256 && !(ifd.t254 && (ifd.t254[0] & 1)));
+    if (!ifds.length) throw new Error('у TIFF немає сторінок-зображень');
+    return {
+      kind: 'TIFF',
+      count: ifds.length,
+      async render(i) {
+        const ifd = ifds[i];
+        UTIF.decodeImage(buf, ifd, ifds);
+        const rgba = UTIF.toRGBA8(ifd);
+        const c = newCanvas(ifd.width, ifd.height);
+        c.getContext('2d').putImageData(new ImageData(new Uint8ClampedArray(rgba.buffer, rgba.byteOffset, rgba.length), ifd.width, ifd.height), 0, 0);
+        delete ifd.data;
+        return c;
+      },
+    };
+  }
+
+  function openImage(blob) {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => resolve({
+        kind: 'Зображення',
+        count: 1,
+        async render() {
+          const c = newCanvas(img.naturalWidth, img.naturalHeight);
+          const ctx = c.getContext('2d');
+          ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.width, c.height);
+          ctx.drawImage(img, 0, 0);
+          return c;
+        },
+      });
+      img.onerror = () => reject(new Error('браузер не може відкрити цей формат'));
+      img.src = URL.createObjectURL(blob);
+    });
+  }
+
+  function sniff(bytes) {
+    const b = new Uint8Array(bytes.slice(0, 5));
+    if (b[0] === 0x25 && b[1] === 0x50 && b[2] === 0x44 && b[3] === 0x46) return 'pdf';
+    if ((b[0] === 0x49 && b[1] === 0x49 && b[2] === 0x2a && b[3] === 0) || (b[0] === 0x4d && b[1] === 0x4d && b[2] === 0 && b[3] === 0x2a)) return 'tiff';
+    return 'image';
+  }
+
+  async function openFile(name, blob) {
+    const g = ++gen;
+    setStatus('Відкриття файлу…', 0);
+    try {
+      const buf = await blob.arrayBuffer();
+      const type = sniff(buf);
+      const d = type === 'pdf' ? await openPdf(buf) : type === 'tiff' ? openTiff(buf) : await openImage(blob);
+      if (g !== gen) return;
+      d.name = name;
+      d.cache = new Map(); // останні відрендерені сторінки
+      doc = d;
+      const n = Math.min(d.count, MAX_PAGES);
+      pages = Array.from({ length: n }, () => ({ rot: 0, result: null }));
+      cur = 0; showProcessed = false;
+      $('file-meta').textContent = name + ' · ' + d.kind + ' · ' + d.count + ' ' + plural(d.count, 'сторінка', 'сторінки', 'сторінок')
+        + (d.count > MAX_PAGES ? ' (розпізнаються перші ' + MAX_PAGES + ')' : '');
+      $('out').textContent = ''; renderReq(null); resetStats();
+      await showPage();
+      run();
+    } catch (e) {
+      console.error(e);
+      if (g === gen) setStatus('Не вдалося відкрити «' + name + '»: ' + (e && e.message ? e.message : e) + '.', 0, true);
+    }
+  }
+
+  function plural(n, one, few, many) {
+    const m10 = n % 10, m100 = n % 100;
+    if (m10 === 1 && m100 !== 11) return one;
+    if (m10 >= 2 && m10 <= 4 && (m100 < 12 || m100 > 14)) return few;
+    return many;
+  }
+
+  // ---------- підготовка сторінки ----------
+  async function rendered(d, i) {
+    if (d.cache.has(i)) return d.cache.get(i);
+    const c = await d.render(i);
+    d.cache.set(i, c);
+    while (d.cache.size > 2) d.cache.delete(d.cache.keys().next().value);
+    return c;
+  }
+
+  function rotate(src, rot) {
+    if (!rot) return src;
+    const swap = rot % 180 !== 0;
+    const c = newCanvas(swap ? src.height : src.width, swap ? src.width : src.height);
+    const ctx = c.getContext('2d');
+    ctx.translate(c.width / 2, c.height / 2);
+    ctx.rotate(rot * Math.PI / 180);
+    ctx.drawImage(src, -src.width / 2, -src.height / 2);
+    return c;
+  }
+
+  // Сірий -> збільшення сканів з низькою роздільністю -> легке розмиття проти шуму.
+  // Бінаризацію робить сам Tesseract методом Sauvola (див. thresholding_method у run()).
+  function enhance(src) {
+    const scale = Math.max(src.width, src.height) < 2000 ? 2 : 1;
+    const c = newCanvas(src.width * scale, src.height * scale);
+    const ctx = c.getContext('2d');
+    ctx.imageSmoothingQuality = 'high';
+    ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.width, c.height);
+    ctx.filter = 'grayscale(1) contrast(1.15) blur(' + (0.6 * scale) + 'px)';
+    ctx.drawImage(src, 0, 0, c.width, c.height);
+    return c;
+  }
+
+  async function pageInput(d, i, rot) {
+    const c = rotate(await rendered(d, i), rot);
+    return $('enhance').checked ? enhance(c) : c;
+  }
+
+  // ---------- перегляд ----------
+  async function showPage() {
+    const n = pages.length;
+    $('page-num').textContent = n ? (cur + 1) + ' / ' + n : '—';
+    $('prev').disabled = cur <= 0;
+    $('next').disabled = cur >= n - 1;
+    $('rotate').disabled = !n;
+    $('view').disabled = !n || !$('enhance').checked;
+    if (!$('enhance').checked) showProcessed = false;
+    $('view').textContent = showProcessed ? 'Показати оригінал' : 'Показати оброблене';
+    document.querySelectorAll('.page-sep').forEach((el) => el.classList.toggle('cur', +el.dataset.i === cur));
+    if (!n) return;
+    const i = cur, g = gen, d = doc, rot = pages[i].rot;
+    const c = showProcessed ? await pageInput(d, i, rot) : rotate(await rendered(d, i), rot);
+    if (i !== cur || g !== gen) return;
+    const drop = $('drop');
+    drop.querySelectorAll('canvas').forEach((el) => el.remove());
+    $('drop-hint').hidden = true;
+    c.setAttribute('aria-label', 'Сторінка ' + (i + 1));
+    drop.appendChild(c);
+  }
+
+  // ---------- розпізнавання ----------
+  async function run() {
+    if (!doc) return;
+    if (running) { gen++; return; } // поточний цикл помітить зміну і почне заново
+    running = true;
+    try {
+      while (true) {
+        const g = gen;
+        const todo = pages.map((p, i) => (p.result ? -1 : i)).filter((i) => i >= 0);
+        if (!todo.length) break;
+        $('copy').disabled = true;
+        const w = await getWorker();
+        if (g !== gen) continue;
+        await w.setParameters({
+          tessedit_pageseg_mode: $('auto-layout').checked ? '3' : '6',
+          preserve_interword_spaces: '1',
+          thresholding_method: $('enhance').checked ? '2' : '0', // 2 = Sauvola, стійкий до шуму й нерівного освітлення
+        });
+        const done0 = pages.length - todo.length;
+        for (let k = 0; k < todo.length; k++) {
+          const i = todo[k];
+          job = { i, n: pages.length, done: done0 + k };
+          const input = await pageInput(doc, i, pages[i].rot);
+          if (g !== gen) break;
+          const t0 = performance.now();
+          const { data } = await w.recognize(input, { rotateAuto: true }, { text: true, tsv: true });
+          if (g !== gen) break;
+          pages[i].result = { text: data.text || '', lines: parseTsv(data.tsv || ''), secs: (performance.now() - t0) / 1000 };
+          renderAll();
+        }
+      }
+      renderAll();
+      const n = pages.length;
+      setStatus('Готово · ' + (n > 1 ? n + ' ' + plural(n, 'сторінка', 'сторінки', 'сторінок') + ' · ' : '') + workerLangs.replace(/\+/g, ' + '), 1);
+    } catch (e) {
+      console.error(e);
+      setStatus('Не вдалося розпізнати: ' + (e && e.message ? e.message : e), 0, true);
+    } finally {
+      running = false;
+    }
+  }
+
+  function invalidate(which) {
+    if (!doc) return;
+    (which == null ? pages : [pages[which]]).forEach((p) => { p.result = null; });
+    gen++;
+    renderAll();
+    showPage();
+    run();
+  }
+
+  // ---------- результат ----------
   function parseTsv(tsv) {
     const lines = [];
     let key = null, prevBlock = null;
@@ -268,29 +511,80 @@
     return lines;
   }
 
-  function renderText(lines) {
-    const out = $('out');
-    out.textContent = '';
-    let words = 0, low = 0;
-    for (const ln of lines) {
-      const div = document.createElement('div');
-      if (!ln) { div.className = 'gap'; out.appendChild(div); continue; }
-      div.className = 'ln';
-      ln.forEach((w, i) => {
-        if (i) div.appendChild(document.createTextNode(' '));
-        const s = document.createElement('span');
-        s.className = 'w'; s.textContent = w.text;
-        words++;
-        if (w.conf < LOW) { s.classList.add('low'); s.title = 'Упевненість ' + Math.round(w.conf) + '%'; low++; }
-        div.appendChild(s);
-      });
-      out.appendChild(div);
-    }
-    if (!words) out.innerHTML = '<div class="empty">Текст не знайдено. Спробуйте «Покращити скан» або інше фото.</div>';
-    return { words, low };
+  function resetStats() {
+    ['st-time', 'st-conf', 'st-words', 'st-low'].forEach((id) => { $(id).textContent = '—'; });
   }
 
-  // --- реквізити
+  function renderAll() {
+    const out = $('out');
+    out.textContent = '';
+    let words = 0, low = 0, confSum = 0, secs = 0;
+    const multi = pages.length > 1;
+    pages.forEach((p, i) => {
+      if (multi) {
+        const sep = document.createElement('div');
+        sep.className = 'page-sep' + (i === cur ? ' cur' : '');
+        sep.dataset.i = i;
+        sep.textContent = 'Сторінка ' + (i + 1);
+        sep.addEventListener('click', () => { cur = i; showPage(); });
+        out.appendChild(sep);
+      }
+      if (!p.result) {
+        const d = document.createElement('div'); d.className = 'wait'; d.textContent = 'у черзі…';
+        out.appendChild(d);
+        return;
+      }
+      secs += p.result.secs;
+      let pageWords = 0;
+      for (const ln of p.result.lines) {
+        const div = document.createElement('div');
+        if (!ln) { div.className = 'gap'; out.appendChild(div); continue; }
+        div.className = 'ln';
+        ln.forEach((w, j) => {
+          if (j) div.appendChild(document.createTextNode(' '));
+          const s = document.createElement('span');
+          s.className = 'w'; s.textContent = w.text;
+          words++; pageWords++; confSum += w.conf;
+          if (w.conf < LOW) { s.classList.add('low'); s.title = 'Упевненість ' + Math.round(w.conf) + '%'; low++; }
+          div.appendChild(s);
+        });
+        out.appendChild(div);
+      }
+      if (!pageWords) {
+        const d = document.createElement('div'); d.className = 'wait';
+        d.textContent = 'Текст не знайдено. Спробуйте «Повернути 90°» або змінити «Покращити скан».';
+        out.appendChild(d);
+      }
+    });
+    const done = pages.filter((p) => p.result);
+    if (done.length) {
+      $('st-time').textContent = secs.toFixed(1);
+      $('st-conf').textContent = words ? Math.round(confSum / words) + '%' : '—';
+      $('st-words').textContent = words;
+      $('st-low').textContent = words ? low : '—';
+    } else resetStats();
+    $('copy').disabled = !done.length;
+
+    // реквізити по сторінках: однакові значення зливаються, розбіжності між сторінками видно одразу
+    const merged = new Map();
+    pages.forEach((p, i) => {
+      if (!p.result) return;
+      extract(p.result.text).forEach((r) => {
+        const key = r.k + '|' + r.v;
+        if (merged.has(key)) merged.get(key).pages.push(i + 1);
+        else merged.set(key, { ...r, pages: [i + 1] });
+      });
+    });
+    const order = ['IBAN', 'ЄДРПОУ', 'РНОКПП / ІПН', 'Дата', 'Сума без ПДВ', 'ПДВ', 'Сума до сплати'];
+    const rows = [...merged.values()].sort((a, b) => order.indexOf(a.k) - order.indexOf(b.k));
+    renderReq(done.length ? rows : null);
+  }
+
+  function fullText() {
+    return pages.map((p, i) => (pages.length > 1 ? '--- Сторінка ' + (i + 1) + ' ---\n' : '') + (p.result ? p.result.text.trim() : '')).join('\n\n');
+  }
+
+  // ---------- реквізити ----------
   function ibanValid(iban) {
     const s = iban.slice(4) + iban.slice(0, 4);
     let rem = 0;
@@ -302,7 +596,7 @@
   }
   function edrpouValid(c) {
     const d = [...c].map(Number), n = +c;
-    let w = (n < 30000000 || n > 60000000) ? [1, 2, 3, 4, 5, 6, 7] : [7, 1, 2, 3, 4, 5, 6];
+    const w = (n < 30000000 || n > 60000000) ? [1, 2, 3, 4, 5, 6, 7] : [7, 1, 2, 3, 4, 5, 6];
     const sum = (ws) => ws.reduce((a, x, i) => a + x * d[i], 0) % 11;
     let s = sum(w);
     if (s === 10) { s = sum(w.map((x) => x + 2)); if (s === 10) s = 0; }
@@ -314,49 +608,40 @@
   }
 
   function extract(text) {
-    const rows = [];
+    const rows = [], seen = new Set();
+    const add = (r) => { const key = r.k + '|' + r.v; if (!seen.has(key)) { seen.add(key); rows.push(r); } };
     const flat = text.replace(/ /g, ' ');
 
     for (const m of flat.matchAll(/([UУОO0][AА])[ ]?(\d{2}(?:[ ]?\d){25})(?!\d)/g)) {
       const iban = 'UA' + m[2].replace(/ /g, '');
-      const fixed = m[1] !== 'UA';
-      const ok = ibanValid(iban);
-      rows.push({ k: 'IBAN', v: iban, ok, note: fixed ? 'Префікс розпізнано як «' + m[1] + '», виправлено на UA.' : '' });
+      add({ k: 'IBAN', v: iban, ok: ibanValid(iban), note: m[1] !== 'UA' ? 'Префікс розпізнано як «' + m[1] + '», виправлено на UA.' : '' });
     }
-    for (const m of flat.matchAll(/(?:ЄДРПОУ|ЕДРПОУ|ЄДР|код)\D{0,12}?(\d{8})(?!\d)/gi)) {
-      rows.push({ k: 'ЄДРПОУ', v: m[1], ok: edrpouValid(m[1]) });
-    }
-    for (const m of flat.matchAll(/(?:РНОКПП|ІПН|ИНН|ідентифікаційний)\D{0,12}?(\d{10})(?!\d)/gi)) {
-      rows.push({ k: 'РНОКПП / ІПН', v: m[1], ok: rnokppValid(m[1]) });
-    }
+    for (const m of flat.matchAll(/(?:ЄДРПОУ|ЕДРПОУ|ЄДР|код)\D{0,12}?(\d{8})(?!\d)/gi)) add({ k: 'ЄДРПОУ', v: m[1], ok: edrpouValid(m[1]) });
+    for (const m of flat.matchAll(/(?:РНОКПП|ІПН|ИНН|ідентифікаційний)\D{0,12}?(\d{10})(?!\d)/gi)) add({ k: 'РНОКПП / ІПН', v: m[1], ok: rnokppValid(m[1]) });
+
     const months = 'січня|лютого|березня|квітня|травня|червня|липня|серпня|вересня|жовтня|листопада|грудня';
-    const dates = new Set();
-    for (const m of flat.matchAll(/\b(\d{1,2})[.\/](\d{1,2})[.\/](\d{2,4})\b/g)) dates.add(m[0]);
-    for (const m of flat.matchAll(new RegExp('\\b(\\d{1,2})\\s+(' + months + ')\\s+(\\d{4})', 'gi'))) dates.add(m[0]);
-    dates.forEach((d) => rows.push({ k: 'Дата', v: d, ok: null }));
+    for (const m of flat.matchAll(/\b(\d{1,2})[.\/](\d{1,2})[.\/](\d{2,4})\b/g)) add({ k: 'Дата', v: m[0], ok: null });
+    for (const m of flat.matchAll(new RegExp('\\b(\\d{1,2})\\s+(' + months + ')\\s+(\\d{4})', 'gi'))) add({ k: 'Дата', v: m[0], ok: null });
 
     const numRe = /\d{1,3}(?:[ ]\d{3})*[,.]\d{2}(?!\d)|\d+[,.]\d{2}(?!\d)/g;
     const lines = flat.split('\n');
-    const pick = (re) => {
-      for (let i = lines.length - 1; i >= 0; i--) {
-        if (re.test(lines[i])) { const n = lines[i].match(numRe); if (n) return n[n.length - 1]; }
-      }
-      return null;
-    };
-    const total = pick(/до\s+сплати|всього|усього|итого|к\s+оплате/i);
-    const vat = pick(/ПДВ|НДС/i);
-    if (total) rows.push({ k: 'Сума до сплати', v: total, ok: null });
-    if (vat) rows.push({ k: 'ПДВ', v: vat, ok: null });
+    const pickAll = (re) => lines.filter((l) => re.test(l)).map((l) => { const n = l.match(numRe); return n ? n[n.length - 1] : null; }).filter(Boolean);
+    const noVat = /без\s+(ПДВ|НДС)/i;
+    pickAll(noVat).forEach((v) => add({ k: 'Сума без ПДВ', v, ok: null }));
+    lines.filter((l) => /ПДВ|НДС/i.test(l) && !noVat.test(l)).forEach((l) => { const n = l.match(numRe); if (n) add({ k: 'ПДВ', v: n[n.length - 1], ok: null }); });
+    pickAll(/до\s+сплати|всього|усього|итого|к\s+оплате/i).forEach((v) => add({ k: 'Сума до сплати', v, ok: null }));
     return rows;
   }
 
   function renderReq(rows) {
     const box = $('req');
     box.textContent = '';
+    if (!rows) { box.innerHTML = '<div class="empty">Тут з\'являться IBAN, коди, дати й сума до сплати.</div>'; return; }
     if (!rows.length) { box.innerHTML = '<div class="empty">Реквізитів не знайдено.</div>'; return; }
     for (const r of rows) {
       const row = document.createElement('div'); row.className = 'req-row';
       const k = document.createElement('span'); k.className = 'k'; k.textContent = r.k;
+      if (pages.length > 1) { const pg = document.createElement('small'); pg.textContent = 'стор. ' + r.pages.join(', '); k.appendChild(pg); }
       const v = document.createElement('span'); v.className = 'v'; v.textContent = r.v;
       const p = document.createElement('span');
       p.className = 'pill ' + (r.ok === null ? 'na' : r.ok ? 'ok' : 'bad');
@@ -367,81 +652,38 @@
     }
   }
 
-  function showImage(which) {
-    const img = $('preview');
-    showingProcessed = which === 'processed' && !!processed;
-    img.src = showingProcessed ? processed.toDataURL('image/png') : original.src;
-    $('view').textContent = showingProcessed ? 'Показати оригінал' : 'Показати оброблене';
-    $('img-title').textContent = showingProcessed ? 'Після обробки' : 'Зображення';
-  }
-
-  async function run() {
-    if (!original) return;
-    if (busy) { pending = true; return; }
-    busy = true; pending = false;
-    $('copy').disabled = true;
-    try {
-      const w = await getWorker();
-      await w.setParameters({ tessedit_pageseg_mode: $('auto-layout').checked ? '3' : '6', preserve_interword_spaces: '1' });
-      processed = $('enhance').checked ? enhance(original) : null;
-      $('view').hidden = !processed;
-      if (!processed && showingProcessed) showImage('original');
-      setStatus('Розпізнавання…', 0);
-      const t0 = performance.now();
-      const { data } = await w.recognize(processed || original, { rotateAuto: !!processed }, { text: true, tsv: true });
-      const secs = (performance.now() - t0) / 1000;
-      lastText = data.text || '';
-      const { words, low } = renderText(parseTsv(data.tsv || ''));
-      renderReq(extract(lastText));
-      $('st-time').textContent = secs.toFixed(1);
-      $('st-conf').textContent = words ? Math.round(data.confidence) + '%' : '—';
-      $('st-words').textContent = words;
-      $('st-low').textContent = words ? low : '—';
-      $('copy').disabled = !lastText.trim();
-      setStatus('Готово · ' + workerLangs.replace(/\+/g, ' + '), 1);
-    } catch (e) {
-      console.error(e);
-      setStatus('Не вдалося запустити розпізнавання: ' + (e && e.message ? e.message : e), 0, true);
-    } finally {
-      busy = false;
-      if (pending) run();
-    }
-  }
-
-  function loadSrc(src) {
-    const img = new Image();
-    img.onload = () => {
-      original = img;
-      $('preview').hidden = false; $('drop-hint').hidden = true;
-      showImage('original');
-      run();
-    };
-    img.onerror = () => setStatus('Цей файл не вдалося відкрити як зображення. Підійдуть JPG, PNG, WEBP; PDF спершу збережіть як картинку.', 0, true);
-    img.src = src;
-  }
-  function loadFile(file) {
-    if (!file) return;
-    if (!file.type.startsWith('image/')) { setStatus('Потрібне зображення (JPG, PNG, WEBP). PDF спершу збережіть як картинку або зробіть скріншот сторінки.', 0, true); return; }
-    loadSrc(URL.createObjectURL(file));
-  }
-
-  $('file').addEventListener('change', (e) => { loadFile(e.target.files[0]); e.target.value = ''; });
-  $('s-clean').addEventListener('click', () => { $('enhance').checked = false; loadSrc(abs('samples/invoice_clean.png')); });
-  $('s-bad').addEventListener('click', () => { $('enhance').checked = true; loadSrc(abs('samples/invoice_bad_scan.png')); });
-  ['l-ukr', 'l-rus', 'l-eng', 'enhance', 'auto-layout'].forEach((id) => $(id).addEventListener('change', run));
-  $('view').addEventListener('click', () => showImage(showingProcessed ? 'original' : 'processed'));
+  // ---------- події ----------
+  $('file').addEventListener('change', (e) => { const f = e.target.files[0]; if (f) openFile(f.name, f); e.target.value = ''; });
+  $('s-pdf').addEventListener('click', async () => {
+    const r = await fetch(abs('samples/scan_invoice.pdf'));
+    openFile('scan_invoice.pdf (приклад)', await r.blob());
+  });
+  $('s-tif').addEventListener('click', async () => {
+    const b64 = (await (await fetch(abs('samples/scan_invoice_g4.tif.b64.txt'))).text()).trim();
+    const bin = atob(b64), bytes = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    openFile('scan_invoice_g4.tif (приклад)', new Blob([bytes], { type: 'image/tiff' }));
+  });
+  ['l-ukr', 'l-rus', 'l-eng', 'enhance', 'auto-layout'].forEach((id) => $(id).addEventListener('change', () => invalidate()));
+  $('prev').addEventListener('click', () => { if (cur > 0) { cur--; showPage(); } });
+  $('next').addEventListener('click', () => { if (cur < pages.length - 1) { cur++; showPage(); } });
+  $('rotate').addEventListener('click', () => { pages[cur].rot = (pages[cur].rot + 90) % 360; invalidate(cur); });
+  $('view').addEventListener('click', () => { showProcessed = !showProcessed; showPage(); });
 
   const drop = $('drop');
   drop.addEventListener('dragover', (e) => { e.preventDefault(); drop.classList.add('over'); });
   drop.addEventListener('dragleave', () => drop.classList.remove('over'));
-  drop.addEventListener('drop', (e) => { e.preventDefault(); drop.classList.remove('over'); loadFile(e.dataTransfer.files[0]); });
+  drop.addEventListener('drop', (e) => {
+    e.preventDefault(); drop.classList.remove('over');
+    const f = e.dataTransfer.files[0]; if (f) openFile(f.name, f);
+  });
   document.addEventListener('paste', (e) => {
-    const item = [...(e.clipboardData?.items || [])].find((i) => i.type.startsWith('image/'));
-    if (item) loadFile(item.getAsFile());
+    const f = [...(e.clipboardData?.files || [])][0];
+    if (f) openFile(f.name || 'з буфера', f);
   });
 
   $('copy').addEventListener('click', async () => {
-    try { await navigator.clipboard.writeText(lastText); $('copy').textContent = 'Скопійовано'; }
+    try { await navigator.clipboard.writeText(fullText()); $('copy').textContent = 'Скопійовано'; }
     catch {
       const sel = window.getSelection(), range = document.createRange();
       range.selectNodeContents($('out')); sel.removeAllRanges(); sel.addRange(range);
@@ -450,10 +692,7 @@
     setTimeout(() => { $('copy').textContent = 'Копіювати'; }, 2000);
   });
 
-  if (typeof Tesseract === 'undefined') {
-    setStatus('Не завантажився файл рушія tesseract.min.js.', 0, true);
-  } else {
-    $('s-bad').click();
-  }
+  if (typeof Tesseract === 'undefined') setStatus('Не завантажився файл рушія tesseract.min.js.', 0, true);
+  else $('s-pdf').click();
 })();
 </script>
