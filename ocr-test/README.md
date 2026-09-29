@@ -50,3 +50,23 @@ python3 bench.py --tessdata-best /шлях/до/tessdata_best
 
 Tesseract на поганих сторінках помиляється саме в цифрах (IBAN, ЄДРПОУ, суми). У EasyOCR загальний текст трохи гірший (плутає схожі латинські й кириличні літери), зате цифри точніші.
 PaddleOCR (PP-OCRv5 `eslav`) і VLM-моделі тут не перевірялися: у середовищі, де запускався тест, були недоступні їхні сервери моделей.
+
+## Windows (cmd)
+
+Потрібні Python 3.10+ (python.org) і Tesseract 5 з інсталятора https://github.com/UB-Mannheim/tesseract/wiki: під час встановлення в «Additional language data» позначте Ukrainian і Russian.
+Додавати Tesseract у PATH не обов'язково: `ocr.py` сам знайде його в `C:\Program Files\Tesseract-OCR`. Тестові скани вже лежать у `samples\`, `make_samples.py` запускати не треба.
+
+```bat
+cd ocr-test
+py -m pip install pillow pytesseract opencv-python-headless numpy pymupdf
+py ocr.py samples\scan_invoice.pdf --prep --gt samples\invoice_ground_truth.txt
+py ocr.py C:\Скани\рахунок.tif --prep
+py bench.py --engines tesseract
+```
+
+Сторінку для браузера збирає `web\build.cmd` (потрібен Node.js; tar і PowerShell уже є у Windows 10+):
+
+```bat
+web\build.cmd
+py -m http.server -d web\dist 8000
+```

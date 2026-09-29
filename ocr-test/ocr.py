@@ -9,6 +9,7 @@
 """
 import argparse
 import difflib
+import shutil
 import time
 from pathlib import Path
 
@@ -19,6 +20,11 @@ import pytesseract
 from PIL import Image, ImageSequence
 
 PDF_DPI = 300
+
+# Інсталятор Tesseract для Windows (UB Mannheim) за замовчуванням не додає tesseract.exe у PATH
+WIN_TESSERACT = Path(r"C:\Program Files\Tesseract-OCR\tesseract.exe")
+if not shutil.which("tesseract") and WIN_TESSERACT.exists():
+    pytesseract.pytesseract.tesseract_cmd = str(WIN_TESSERACT)
 
 
 def load_pages(path: str) -> list[Image.Image]:
