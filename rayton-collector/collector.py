@@ -21,6 +21,7 @@ import threading
 import time
 from datetime import datetime
 from pathlib import Path
+from urllib.parse import urlsplit
 
 import socketio
 
@@ -142,6 +143,31 @@ def ticker(state: State, interval: int):
             log(f"записано рядків: {rows} ({short})")
 
 
+def connect_forever(url: str, state: State):
+    """Тримає зв'язок з кабінетом і передає події в state; повертається лише після Ctrl+C."""
+    parts = urlsplit(url if "//" in url else f"http://{url}")
+    base = f"{parts.scheme}://{parts.netloc}"  # можна дати й адресу сторінки: .../dashboard/page4
+    sio = socketio.Client(reconnection_delay=2, reconnection_delay_max=10)
+    sio.on("*", state.on_event)
+    sio.on("connect", lambda: log(f"підключено до {base}"))
+    sio.on("disconnect", state.on_disconnect)
+    failing = False
+    try:
+        while True:
+            try:
+                # браузер працює з кабінетом тільки через polling (без WebSocket), робимо так само
+                sio.connect(base, socketio_path="dashboard/socket.io", transports=["polling"], wait_timeout=10)
+                failing = False
+                sio.wait()
+            except socketio.exceptions.ConnectionError as e:
+                if not failing:
+                    log(f"контролер недоступний ({str(e)[:200]}), пробую кожні 10 с")
+                failing = True
+            time.sleep(10)
+    except KeyboardInterrupt:
+        sio.disconnect()
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--url", default="http://192.168.0.57", help="адреса кабінету контролера")
@@ -159,28 +185,9 @@ def main():
 
         state.cloud = Cloud(args.firestore_key, args.firestore_db, args.out, args.live_every, log)
         log(f"запис у Firestore увімкнено (база {args.firestore_db})")
-    sio = socketio.Client(reconnection_delay=2, reconnection_delay_max=10)
-    sio.on("*", state.on_event)
-    sio.on("connect", lambda: log(f"підключено до {args.url}"))
-    sio.on("disconnect", state.on_disconnect)
     threading.Thread(target=ticker, args=(state, args.interval), daemon=True).start()
     log(f"пишу в {args.out.resolve()}, Ctrl+C для зупинки")
-
-    failing = False
-    try:
-        while True:
-            try:
-                # браузер працює з кабінетом тільки через polling (без WebSocket), робимо так само
-                sio.connect(args.url, socketio_path="dashboard/socket.io", transports=["polling"], wait_timeout=10)
-                failing = False
-                sio.wait()
-            except socketio.exceptions.ConnectionError as e:
-                if not failing:
-                    log(f"контролер недоступний ({str(e)[:200]}), пробую кожні 10 с")
-                failing = True
-            time.sleep(10)
-    except KeyboardInterrupt:
-        sio.disconnect()
+    connect_forever(args.url, state)
 
 
 if __name__ == "__main__":
