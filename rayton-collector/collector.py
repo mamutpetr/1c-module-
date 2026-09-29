@@ -1,8 +1,9 @@
-"""Збирач даних з контролера Rayton: безперервно записує показники в CSV.
+"""Збирач даних з контролера Rayton: безперервно записує показники в CSV і, за бажанням, у Firestore.
 
     pip install -r requirements.txt
     python collector.py                                   # http://192.168.0.57, рядок кожні 5 с у data/
     python collector.py --url http://192.168.0.57 --interval 1 --out data
+    python collector.py --firestore-key ключ.json --firestore-db ID-бази   # ще й у базу сайту (див. cloud.py)
 
 Кабінет контролера (Node-RED, FlowFuse Dashboard 2.0) не зберігає історію, а лише передає поточні
 значення через Socket.IO: /dashboard/socket.io, подія "msg-input:<id віджета>", у полі topic назва
@@ -49,12 +50,15 @@ class State:
         self.last_msg = 0.0
         self.saved = {}  # ім'я файлу -> останній записаний JSON
         self.seen_events = set()
+        self.cloud = None
 
     def save_json(self, name: str, data):
         text = json.dumps(data, ensure_ascii=False, indent=1)
         if self.saved.get(name) != text:
             (self.out / f"{name}.json").write_text(text, encoding="utf-8")
             self.saved[name] = text
+            if name == "schedule" and self.cloud:
+                self.cloud.set_schedule(data)
 
     def on_event(self, event: str, *args):
         if not event.startswith("msg-input:") or not args or not isinstance(args[0], dict):
@@ -82,6 +86,12 @@ class State:
         with self.lock:
             self.last_msg = 0.0
 
+    def snapshot(self):
+        """Останні значення або None, якщо свіжих даних немає."""
+        with self.lock:
+            if self.last_msg and time.monotonic() - self.last_msg <= STALE_AFTER:
+                return dict(self.values)
+
 
 def open_csv(out: Path, day: str, header: list[str]):
     # якщо набір показників змінився (з'явився новий), пишемо в наступну частину дня
@@ -100,15 +110,15 @@ def fmt(v):
     return round(v, 3) if isinstance(v, float) else int(v) if isinstance(v, bool) else v
 
 
-def writer(state: State, interval: float):
+def ticker(state: State, interval: int):
     f, key, rows, paused = None, None, 0, False
     while True:
-        time.sleep(interval - time.time() % interval)  # рядки на рівних позначках: :00, :05, :10...
+        time.sleep(1 - time.time() % 1)  # рівно на початку кожної секунди
         now = datetime.now().astimezone()
-        with state.lock:
-            fresh = state.last_msg and time.monotonic() - state.last_msg <= STALE_AFTER
-            values = dict(state.values)
-        if not fresh:
+        values = state.snapshot()
+        if state.cloud:
+            state.cloud.tick(now, values)
+        if values is None:
             if rows and not paused:
                 log("немає свіжих даних від контролера, запис призупинено")
             paused = True
@@ -116,6 +126,8 @@ def writer(state: State, interval: float):
         if rows and paused:
             log("дані знову надходять, запис продовжено")
         paused = False
+        if int(now.timestamp()) % interval:
+            continue
         cols = list(KNOWN) + sorted(set(values) - set(KNOWN))
         if key != (now.date(), cols):
             if f:
@@ -133,17 +145,25 @@ def writer(state: State, interval: float):
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--url", default="http://192.168.0.57", help="адреса кабінету контролера")
-    ap.add_argument("--interval", type=float, default=5, help="як часто писати рядок, с (дані йдуть раз на 1 с)")
+    ap.add_argument("--interval", type=int, default=5, help="як часто писати рядок у CSV, с (дані йдуть раз на 1 с)")
     ap.add_argument("--out", type=Path, default=Path(__file__).parent / "data", help="папка для CSV")
+    ap.add_argument("--firestore-key", type=Path, help="JSON-ключ сервісного акаунта Firebase: увімкнути запис у Firestore")
+    ap.add_argument("--firestore-db", default="(default)", help="ID бази Firestore (firestoreDatabaseId у AI Studio)")
+    ap.add_argument("--live-every", type=int, default=10, help="як часто оновлювати rayton_live/current, с")
     args = ap.parse_args()
     args.out.mkdir(parents=True, exist_ok=True)
 
     state = State(args.out)
+    if args.firestore_key:
+        from cloud import Cloud
+
+        state.cloud = Cloud(args.firestore_key, args.firestore_db, args.out, args.live_every, log)
+        log(f"запис у Firestore увімкнено (база {args.firestore_db})")
     sio = socketio.Client(reconnection_delay=2, reconnection_delay_max=10)
     sio.on("*", state.on_event)
     sio.on("connect", lambda: log(f"підключено до {args.url}"))
     sio.on("disconnect", state.on_disconnect)
-    threading.Thread(target=writer, args=(state, args.interval), daemon=True).start()
+    threading.Thread(target=ticker, args=(state, args.interval), daemon=True).start()
     log(f"пишу в {args.out.resolve()}, Ctrl+C для зупинки")
 
     failing = False

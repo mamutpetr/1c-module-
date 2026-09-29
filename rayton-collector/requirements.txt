@@ -1,1 +1,2 @@
 python-socketio[client]>=5.8
+google-cloud-firestore>=2.12  # лише для --firestore-key
