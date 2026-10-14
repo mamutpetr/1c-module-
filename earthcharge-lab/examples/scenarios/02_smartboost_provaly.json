@@ -1,0 +1,139 @@
+{
+  "format": "earthcharge-scenario",
+  "version": 1,
+  "app": "EARTHCHARGE LAB 1.0.0",
+  "saved_at": "2026-10-14T09:38:40",
+  "scenario": {
+    "design": {
+      "name": "SmartBoost + провали потужності",
+      "anode": "az31",
+      "cathode": "air_mno2",
+      "electrolyte": "nacl_3_5",
+      "separator": "pp_nonwoven",
+      "geometry": {
+        "plate_length_mm": 100.0,
+        "plate_width_mm": 60.0,
+        "plate_thickness_mm": 1.2,
+        "mass_mode": "thickness",
+        "target_total_mass_g": 40.0,
+        "faces": 2,
+        "active_fraction": 0.85,
+        "area_override_cm2": 0.0,
+        "cathode_area_ratio": 1.0,
+        "gap_mm": 3.0,
+        "electrolyte_volume_ml": 70.0,
+        "max_utilization": 0.85,
+        "contact_resistance_mohm": 8.0
+      },
+      "stack": {
+        "connection": "series",
+        "n_cells": 3,
+        "n_series": 3,
+        "n_parallel": 1,
+        "wiring_resistance_mohm": 15.0,
+        "shared_electrolyte": false,
+        "shunt_path_mm": 20.0,
+        "shunt_cross_section_cm2": 1.0
+      },
+      "converter": {
+        "enabled": true,
+        "control": "mppt",
+        "efficiency_pct": 88.0,
+        "quiescent_mw": 25.0,
+        "v_in_min": 0.9,
+        "i_in_max_a": 6.0,
+        "input_resistance_mohm": 30.0,
+        "v_out": 5.0,
+        "p_out_max_w": 10.0
+      },
+      "supercap": {
+        "enabled": true,
+        "start_delay_s": 30.0,
+        "capacitance_f": 25.0,
+        "v_max": 5.0,
+        "v_min": 1.0,
+        "v_initial": 0.0,
+        "esr_mohm": 40.0,
+        "leakage_ua": 50.0,
+        "eta_charge_pct": 95.0,
+        "eta_discharge_pct": 95.0,
+        "i_max_a": 5.0,
+        "p_charge_max_w": 10.0,
+        "p_discharge_max_w": 15.0,
+        "smoothing_tau_s": 60.0,
+        "recharge_share_pct": 10.0,
+        "soc_target_pct": 80.0
+      },
+      "environment": {
+        "ambient_c": 25.0,
+        "relative_humidity_pct": 50.0,
+        "air_access": "open",
+        "vent_area_cm2": 6.0,
+        "vent_length_mm": 3.0,
+        "enclosure_free_volume_ml": 200.0,
+        "air_exchange_per_h": 900.0,
+        "heat_area_override_cm2": 0.0,
+        "thermal_model": true
+      },
+      "disturbances": {
+        "enabled": true,
+        "mean_interval_s": 600,
+        "duration_s": 20.0,
+        "depth_pct": 50.0,
+        "seed": 7
+      },
+      "overrides": {}
+    },
+    "phone": {
+      "spec_mode": "mah",
+      "capacity_mah": 5000.0,
+      "nominal_v": 3.85,
+      "energy_wh": 19.25,
+      "soc_start_pct": 20.0,
+      "soc_target_pct": 100.0,
+      "max_charge_power_w": 10.0,
+      "charge_efficiency_pct": 90.0,
+      "self_consumption_w": 0.15,
+      "cv_start_pct": 85.0,
+      "taper_floor_pct": 20.0,
+      "min_input_w": 0.5,
+      "cable_resistance_mohm": 150.0,
+      "max_time_h": 7.0
+    },
+    "sim": {
+      "load_mode": "phone",
+      "usb_power_w": 3.0,
+      "resistor_ohm": 1.5,
+      "current_a": 1.0,
+      "duration_h": 7.0,
+      "dt_s": 1.0,
+      "stop_when_phone_done": false
+    },
+    "notes": "Суперконденсатор 25 Ф, запуск USB-C через 30 с, телефон бере до 10 Вт, тестові провали площі 50% кожні ~10 хв."
+  },
+  "economics": {
+    "prices": {
+      "currency": "грн",
+      "mg_price_per_kg": 800.0,
+      "cathode_price_per_cm2": 0.4,
+      "cathode_location": "device",
+      "cathode_life_charges": 50.0,
+      "separator_price_per_cm2": 0.02,
+      "salt_price_per_kg": 20.0,
+      "electrolyte_pack_per_activation": 2.0,
+      "housing_base": 25.0,
+      "housing_extra_per_charge": 4.0,
+      "contacts_cost": 6.0,
+      "assembly_cost": 20.0,
+      "packaging_cost": 8.0,
+      "overhead_pct": 15.0,
+      "defect_pct": 3.0,
+      "logistics_per_unit": 6.0,
+      "target_margin_pct": 45.0,
+      "vat_pct": 20.0,
+      "reserve_pct": 15.0,
+      "hours_between_charges": 24.0,
+      "electrolyte_drained": true
+    }
+  }
+}

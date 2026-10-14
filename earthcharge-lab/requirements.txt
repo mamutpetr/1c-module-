@@ -1,0 +1,7 @@
+# EARTHCHARGE LAB — залежності (Python 3.10–3.13, Windows / Linux / macOS)
+PySide6>=6.6
+pyqtgraph>=0.13.3
+numpy>=1.24
+scipy>=1.10
+# лише для автоматичних тестів
+pytest>=7.0
