@@ -1,0 +1,12 @@
+{
+  "name": "fortuna-web",
+  "version": "1.0.0",
+  "private": true,
+  "description": "ФОРТУНА: веб-інтерфейс калькуляцій собівартості для BAS / 1С 8.3",
+  "scripts": {
+    "demo": "node tools/make-demo.mjs",
+    "build": "node tools/build.mjs",
+    "test": "node --test test/",
+    "smoke": "node test/ui-smoke.mjs"
+  }
+}
